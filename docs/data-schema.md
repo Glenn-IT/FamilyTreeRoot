@@ -6,19 +6,19 @@ Each person in the family tree is represented by a flat JSON object in an array 
 
 ## Person Object
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `id` | `string` | ✅ | Unique identifier (e.g. `"p1"`, `"p12"`) |
-| `firstName` | `string` | ✅ | Person's first name |
-| `lastName` | `string` | ✅ | Person's last name / family name |
-| `birth` | `string` | ❌ | Birth year (e.g. `"1985"`) or `""` if unknown |
-| `death` | `string` | ❌ | Death year (e.g. `"2020"`) or `null` if living |
-| `gender` | `"male" \| "female" \| "other"` | ✅ | Used for default avatar icon and card colour |
-| `role` | `"patriarch" \| "matriarch" \| "parent" \| "child"` | ✅ | Displayed as badge on the card |
-| `photo` | `string \| null` | ❌ | Base64 Data URL of the person's photo, or `null` |
-| `spouseId` | `string \| null` | ❌ | `id` of this person's spouse, or `null` |
-| `parentIds` | `string[]` | ✅ | Array of parent `id`s (0, 1, or 2 entries) |
-| `childrenIds` | `string[]` | ✅ | Array of children `id`s |
+| Field         | Type                                                | Required | Description                                      |
+| ------------- | --------------------------------------------------- | -------- | ------------------------------------------------ |
+| `id`          | `string`                                            | ✅       | Unique identifier (e.g. `"p1"`, `"p12"`)         |
+| `firstName`   | `string`                                            | ✅       | Person's first name                              |
+| `lastName`    | `string`                                            | ✅       | Person's last name / family name                 |
+| `birth`       | `string`                                            | ❌       | Birth year (e.g. `"1985"`) or `""` if unknown    |
+| `death`       | `string`                                            | ❌       | Death year (e.g. `"2020"`) or `null` if living   |
+| `gender`      | `"male" \| "female" \| "other"`                     | ✅       | Used for default avatar icon and card colour     |
+| `role`        | `"patriarch" \| "matriarch" \| "parent" \| "child"` | ✅       | Displayed as badge on the card                   |
+| `photo`       | `string \| null`                                    | ❌       | Base64 Data URL of the person's photo, or `null` |
+| `spouseId`    | `string \| null`                                    | ❌       | `id` of this person's spouse, or `null`          |
+| `parentIds`   | `string[]`                                          | ✅       | Array of parent `id`s (0, 1, or 2 entries)       |
+| `childrenIds` | `string[]`                                          | ✅       | Array of children `id`s                          |
 
 ---
 

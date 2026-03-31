@@ -29,18 +29,18 @@ Family Tree is a **single-file React web app** that lets you build, edit, and vi
 
 ## ✨ Features
 
-| Feature | Details |
-|---|---|
-| 🎨 **Modern UI** | Dark glassmorphism design with gold & coral gradients |
+| Feature                      | Details                                                     |
+| ---------------------------- | ----------------------------------------------------------- |
+| 🎨 **Modern UI**             | Dark glassmorphism design with gold & coral gradients       |
 | 👨‍👩‍👧‍👦 **Multi-generation tree** | Renders generations with couple connectors and branch lines |
-| ✏️ **Edit members** | Update name, birth/death year, gender, role at any time |
-| 📷 **Photo upload** | Click any avatar to swap a photo from your device |
-| 💑 **Add spouse** | Attach a spouse to any single member |
-| ➕ **Add children** | Add children under any couple or individual |
-| 🗑️ **Delete members** | Removes member and auto-cleans all relationships |
-| 💾 **Auto-save** | Changes persist automatically via `localStorage` |
-| 📂 **Import / Export** | Save your tree as JSON; reload it any time |
-| 🔄 **Reset** | One-click restore to the sample Anderson family |
+| ✏️ **Edit members**          | Update name, birth/death year, gender, role at any time     |
+| 📷 **Photo upload**          | Click any avatar to swap a photo from your device           |
+| 💑 **Add spouse**            | Attach a spouse to any single member                        |
+| ➕ **Add children**          | Add children under any couple or individual                 |
+| 🗑️ **Delete members**        | Removes member and auto-cleans all relationships            |
+| 💾 **Auto-save**             | Changes persist automatically via `localStorage`            |
+| 📂 **Import / Export**       | Save your tree as JSON; reload it any time                  |
+| 🔄 **Reset**                 | One-click restore to the sample Anderson family             |
 
 ---
 
@@ -87,6 +87,7 @@ FamilyTreeRoot/
 ### Option 3 — Any static host
 
 Deploy the `index.html` (and optionally the `docs/` and `samples/` folders) to:
+
 - GitHub Pages
 - Netlify / Vercel (drag & drop)
 - Any Apache / Nginx server
@@ -96,27 +97,33 @@ Deploy the `index.html` (and optionally the `docs/` and `samples/` folders) to:
 ## 📖 Usage Guide
 
 ### Adding a new family member
+
 - Click **➕ Add Member** in the toolbar.
 - Fill in the name, birth year, gender and role.
 - Optionally upload a photo.
 - Click **Save Member**.
 
 ### Editing an existing member
+
 - Click the **✏️ pencil icon** on any card.
 - Update any field and click **Save Member**.
 
 ### Uploading a photo
+
 - Click directly on the **avatar** circle on any card, **or**
 - Open the edit modal — the photo upload area is at the top.
 
 ### Adding a spouse
+
 - Click **💑 + Spouse** next to any member who has no spouse yet.
 
 ### Adding a child
+
 - Click the **➕ green icon** on the parent's card.
 - Fill in the child's details and save.
 
 ### Import / Export
+
 - **Export** — Click 💾 Export JSON to download your tree as `family-tree.json`.
 - **Import** — Click 📂 Import JSON and select a previously exported file.
 
@@ -124,15 +131,15 @@ Deploy the `index.html` (and optionally the `docs/` and `samples/` folders) to:
 
 ## 🛠 Tech Stack
 
-| Technology | Version | Purpose |
-|---|---|---|
-| React | 18 (CDN) | UI components & state |
-| ReactDOM | 18 (CDN) | DOM rendering |
+| Technology       | Version      | Purpose                       |
+| ---------------- | ------------ | ----------------------------- |
+| React            | 18 (CDN)     | UI components & state         |
+| ReactDOM         | 18 (CDN)     | DOM rendering                 |
 | Babel Standalone | Latest (CDN) | JSX → JS in-browser transform |
-| Playfair Display | Google Fonts | Elegant serif headings |
-| Inter | Google Fonts | Clean UI body font |
-| localStorage | Browser API | Persistent data storage |
-| FileReader API | Browser API | Client-side image/JSON import |
+| Playfair Display | Google Fonts | Elegant serif headings        |
+| Inter            | Google Fonts | Clean UI body font            |
+| localStorage     | Browser API  | Persistent data storage       |
+| FileReader API   | Browser API  | Client-side image/JSON import |
 
 > No npm, no webpack, no build step required.
 
@@ -143,6 +150,7 @@ Deploy the `index.html` (and optionally the `docs/` and `samples/` folders) to:
 Each family member is stored as a JSON object. See [`docs/data-schema.md`](docs/data-schema.md) for full details.
 
 **Quick example:**
+
 ```json
 {
   "id": "p1",
