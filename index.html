@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Family Tree</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    #root { min-height: 100vh; }
+
+    /* ── HEADER ── */
+    .header {
+      text-align: center;
+      padding: 40px 20px 20px;
+      position: relative;
+    }
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 2px;
+    }
+    .header p {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 16px 20px 24px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 50px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #f9d423, #ff4e50);
+      color: #1a1a2e;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,78,80,0.4); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.16); transform: translateY(-2px); }
+    .btn-danger {
+      background: rgba(255, 80, 80, 0.15);
+      color: #ff6b6b;
+      border: 1px solid rgba(255,80,80,0.3);
+    }
+    .btn-danger:hover { background: rgba(255,80,80,0.3); }
+
+    /* ── TREE CANVAS ── */
+    .tree-canvas {
+      width: 100%;
+      overflow-x: auto;
+      padding: 20px 40px 60px;
+    }
+    .tree-inner {
+      min-width: max-content;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* ── GENERATION ROW ── */
+    .gen-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 0;
+      position: relative;
+    }
+
+    /* ── FAMILY UNIT (couple + children) ── */
+    .family-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      padding: 0 20px;
+    }
+
+    /* ── COUPLE ROW ── */
+    .couple-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      position: relative;
+    }
+    .couple-connector {
+      width: 48px;
+      height: 3px;
+      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      border-radius: 2px;
+      position: relative;
+    }
+    .couple-connector::after {
+      content: '♥';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1233;
+      color: #ff4e50;
+      font-size: 12px;
+      padding: 0 4px;
+    }
+
+    /* ── VERTICAL LINE DOWN ── */
+    .v-line-down {
+      width: 3px;
+      height: 36px;
+      background: linear-gradient(180deg, #f9d423, rgba(249,212,35,0.2));
+      border-radius: 2px;
+      margin: 0 auto;
+    }
+
+    /* ── CHILDREN ROW ── */
+    .children-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      position: relative;
+      gap: 0;
+    }
+    .children-row::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: calc(100% - 120px);
+      height: 3px;
+      background: linear-gradient(90deg, rgba(249,212,35,0.2), #f9d423, rgba(249,212,35,0.2));
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+
+    .child-branch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 20px;
+    }
+    .child-branch .v-line-up {
+      width: 3px;
+      height: 36px;
+      background: linear-gradient(180deg, rgba(249,212,35,0.2), #f9d423);
+      border-radius: 2px;
+      margin: 0 auto;
+    }
+
+    /* ── PERSON CARD ── */
+    .person-card {
+      width: 140px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 18px 14px 14px;
+      text-align: center;
+      backdrop-filter: blur(16px);
+      position: relative;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .person-card:hover {
+      transform: translateY(-6px) scale(1.04);
+      border-color: rgba(249,212,35,0.5);
+      box-shadow: 0 16px 40px rgba(249,212,35,0.15);
+    }
+    .person-card.male { border-top: 3px solid #4fc3f7; }
+    .person-card.female { border-top: 3px solid #f48fb1; }
+    .person-card.unknown { border-top: 3px solid #b39ddb; }
+
+    .person-avatar {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      position: relative;
+    }
+    .person-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .person-avatar .default-icon {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    .upload-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .person-avatar:hover .upload-overlay { opacity: 1; }
+
+    .person-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+    .person-dates {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 8px;
+    }
+    .person-role {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .role-patriarch { background: rgba(79,195,247,0.15); color: #4fc3f7; }
+    .role-matriarch { background: rgba(244,143,177,0.15); color: #f48fb1; }
+    .role-parent    { background: rgba(179,157,219,0.15); color: #b39ddb; }
+    .role-child     { background: rgba(129,199,132,0.15); color: #81c784; }
+
+    .card-actions {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .card-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .card-btn-edit { background: rgba(249,212,35,0.15); color: #f9d423; }
+    .card-btn-edit:hover { background: rgba(249,212,35,0.35); }
+    .card-btn-delete { background: rgba(255,80,80,0.15); color: #ff6b6b; }
+    .card-btn-delete:hover { background: rgba(255,80,80,0.3); }
+    .card-btn-add { background: rgba(129,199,132,0.15); color: #81c784; }
+    .card-btn-add:hover { background: rgba(129,199,132,0.3); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(6px);
+      padding: 20px;
+    }
+    .modal {
+      background: linear-gradient(145deg, #1a1233, #24183d);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 36px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      position: relative;
+    }
+    .modal h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      margin-bottom: 24px;
+      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      font-size: 22px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: #fff; }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 7px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      padding: 11px 14px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: rgba(249,212,35,0.5);
+    }
+    .form-group select option { background: #1a1233; color: #fff; }
+
+    .avatar-upload-area {
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .avatar-upload-area:hover {
+      border-color: rgba(249,212,35,0.5);
+      background: rgba(249,212,35,0.04);
+    }
+    .avatar-upload-area input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .avatar-preview {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 8px;
+      display: block;
+      border: 3px solid rgba(249,212,35,0.4);
+    }
+    .avatar-upload-icon { font-size: 32px; margin-bottom: 8px; }
+    .avatar-upload-text { font-size: 0.82rem; color: rgba(255,255,255,0.45); }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .modal-actions .btn { flex: 1; justify-content: center; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+    }
+    .empty-state .emoji { font-size: 72px; margin-bottom: 20px; }
+    .empty-state h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      color: rgba(255,255,255,0.8);
+    }
+    .empty-state p {
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 28px;
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      flex-wrap: wrap;
+      padding: 10px 20px 24px;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { height: 6px; width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); }
+    ::-webkit-scrollbar-thumb { background: rgba(249,212,35,0.3); border-radius: 4px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+
+const { useState, useRef, useCallback } = React;
+
+/* ── helpers ── */
+let _id = 1;
+const uid = () => `p${_id++}`;
+
+const defaultTree = () => {
+  const grandfatherId = uid();
+  const grandmotherId = uid();
+  const fatherId      = uid();
+  const motherId      = uid();
+  const child1Id      = uid();
+  const child2Id      = uid();
+
+  return [
+    { id: grandfatherId, firstName:'Robert', lastName:'Anderson', birth:'1935', death:'2010', gender:'male',   role:'patriarch', photo:null, spouseId: grandmotherId, parentIds:[], childrenIds:[fatherId] },
+    { id: grandmotherId, firstName:'Margaret', lastName:'Anderson', birth:'1938', death:null, gender:'female', role:'matriarch', photo:null, spouseId: grandfatherId, parentIds:[], childrenIds:[fatherId] },
+    { id: fatherId,      firstName:'James', lastName:'Anderson', birth:'1962', death:null, gender:'male',   role:'parent', photo:null, spouseId: motherId, parentIds:[grandfatherId, grandmotherId], childrenIds:[child1Id, child2Id] },
+    { id: motherId,      firstName:'Sarah',  lastName:'Anderson', birth:'1965', death:null, gender:'female', role:'parent', photo:null, spouseId: fatherId,      parentIds:[], childrenIds:[child1Id, child2Id] },
+    { id: child1Id,      firstName:'Emily',  lastName:'Anderson', birth:'1990', death:null, gender:'female', role:'child', photo:null, spouseId:null, parentIds:[fatherId, motherId], childrenIds:[] },
+    { id: child2Id,      firstName:'Lucas',  lastName:'Anderson', birth:'1993', death:null, gender:'male',   role:'child', photo:null, spouseId:null, parentIds:[fatherId, motherId], childrenIds:[] },
+  ];
+};
+
+/* ── PersonCard ── */
+function PersonCard({ person, onEdit, onDelete, onAddChild, onPhotoChange }) {
+  const fileRef = useRef();
+  const genderClass = person.gender === 'male' ? 'male' : person.gender === 'female' ? 'female' : 'unknown';
+  const roleClass   = { patriarch:'role-patriarch', matriarch:'role-matriarch', parent:'role-parent', child:'role-child' }[person.role] || 'role-child';
+
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => onPhotoChange(person.id, ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className={`person-card ${genderClass}`}>
+      <div className="person-avatar" onClick={() => fileRef.current.click()}>
+        {person.photo
+          ? <img src={person.photo} alt={person.firstName} />
+          : <div className="default-icon">{person.gender === 'female' ? '👩' : '👨'}</div>
+        }
+        <div className="upload-overlay">📷</div>
+        <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleFile}/>
+      </div>
+      <div className="person-name">{person.firstName}<br/>{person.lastName}</div>
+      <div className="person-dates">
+        {person.birth || '?'}{person.death ? ` – ${person.death}` : ''}
+      </div>
+      <span className={`person-role ${roleClass}`}>{person.role}</span>
+      <div className="card-actions">
+        <button className="card-btn card-btn-edit"  title="Edit"      onClick={() => onEdit(person)}>✏️</button>
+        <button className="card-btn card-btn-add"   title="Add Child" onClick={() => onAddChild(person)}>➕</button>
+        <button className="card-btn card-btn-delete" title="Delete"   onClick={() => onDelete(person.id)}>🗑️</button>
+      </div>
+    </div>
+  );
+}
+
+/* ── EditModal ── */
+function EditModal({ person, onSave, onClose }) {
+  const [form, setForm] = useState({
+    firstName: person?.firstName || '',
+    lastName:  person?.lastName  || '',
+    birth:     person?.birth     || '',
+    death:     person?.death     || '',
+    gender:    person?.gender    || 'male',
+    role:      person?.role      || 'child',
+    photo:     person?.photo     || null,
+  });
+  const fileRef = useRef();
+
+  const handle = (k) => (e) => setForm(f => ({...f, [k]: e.target.value}));
+
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setForm(f => ({...f, photo: ev.target.result}));
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <h2>{person?.id ? 'Edit Member' : 'Add Member'}</h2>
+        <button className="modal-close" onClick={onClose}>✕</button>
+
+        <div className="avatar-upload-area" onClick={() => fileRef.current.click()}>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{display:'none'}}/>
+          {form.photo
+            ? <img src={form.photo} className="avatar-preview" alt="preview"/>
+            : <><div className="avatar-upload-icon">🖼️</div><div className="avatar-upload-text">Click to upload photo</div></>
+          }
+        </div>
+
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'18px'}}>
+          <div className="form-group">
+            <label>First Name</label>
+            <input value={form.firstName} onChange={handle('firstName')} placeholder="First name"/>
+          </div>
+          <div className="form-group">
+            <label>Last Name</label>
+            <input value={form.lastName} onChange={handle('lastName')} placeholder="Last name"/>
+          </div>
+          <div className="form-group">
+            <label>Birth Year</label>
+            <input value={form.birth} onChange={handle('birth')} placeholder="e.g. 1985"/>
+          </div>
+          <div className="form-group">
+            <label>Death Year</label>
+            <input value={form.death} onChange={handle('death')} placeholder="Leave blank if living"/>
+          </div>
+          <div className="form-group">
+            <label>Gender</label>
+            <select value={form.gender} onChange={handle('gender')}>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Role</label>
+            <select value={form.role} onChange={handle('role')}>
+              <option value="patriarch">Patriarch</option>
+              <option value="matriarch">Matriarch</option>
+              <option value="parent">Parent</option>
+              <option value="child">Child</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary"   onClick={() => onSave(form)}>Save Member</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── AddSpouseModal ── */
+function AddSpouseModal({ person, onSave, onClose }) {
+  const [form, setForm] = useState({ firstName:'', lastName: person?.lastName||'', birth:'', death:'', gender: person?.gender==='male'?'female':'male', role:'parent', photo:null });
+  const fileRef = useRef();
+  const handle = (k) => (e) => setForm(f=>({...f,[k]:e.target.value}));
+  const handleFile = (e) => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setForm(f=>({...f, photo: ev.target.result}));
+    reader.readAsDataURL(file);
+  };
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <h2>Add Spouse</h2>
+        <button className="modal-close" onClick={onClose}>✕</button>
+        <div className="avatar-upload-area" onClick={() => fileRef.current.click()}>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{display:'none'}}/>
+          {form.photo ? <img src={form.photo} className="avatar-preview" alt="preview"/> : <><div className="avatar-upload-icon">🖼️</div><div className="avatar-upload-text">Click to upload photo</div></>}
+        </div>
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginTop:'18px'}}>
+          <div className="form-group"><label>First Name</label><input value={form.firstName} onChange={handle('firstName')} placeholder="First name"/></div>
+          <div className="form-group"><label>Last Name</label><input value={form.lastName} onChange={handle('lastName')} placeholder="Last name"/></div>
+          <div className="form-group"><label>Birth Year</label><input value={form.birth} onChange={handle('birth')} placeholder="e.g. 1985"/></div>
+          <div className="form-group"><label>Death Year</label><input value={form.death} onChange={handle('death')} placeholder="Leave blank"/></div>
+          <div className="form-group"><label>Gender</label><select value={form.gender} onChange={handle('gender')}><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+          <div className="form-group"><label>Role</label><select value={form.role} onChange={handle('role')}><option value="patriarch">Patriarch</option><option value="matriarch">Matriarch</option><option value="parent">Parent</option><option value="child">Child</option></select></div>
+        </div>
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary"   onClick={()=>onSave(form)}>Add Spouse</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Tree rendering logic ── */
+function buildGenerations(people) {
+  if (!people.length) return [];
+
+  // Find roots (no parents in the current list)
+  const allIds = new Set(people.map(p=>p.id));
+  const roots = people.filter(p => !p.parentIds.some(pid => allIds.has(pid)));
+
+  const visited = new Set();
+  const generations = [];
+
+  function placeFamily(person, depth) {
+    if (visited.has(person.id)) return;
+    visited.add(person.id);
+
+    while (generations.length <= depth) generations.push([]);
+
+    const spouse = person.spouseId ? people.find(p=>p.id===person.spouseId) : null;
+    if (spouse && !visited.has(spouse.id)) {
+      visited.add(spouse.id);
+      generations[depth].push({ type:'couple', members:[person, spouse] });
+    } else if (!spouse) {
+      generations[depth].push({ type:'single', members:[person] });
+    } else {
+      // couple already placed, skip
+    }
+
+    // recurse children
+    const children = people.filter(p => p.parentIds.includes(person.id) || (spouse && p.parentIds.includes(spouse.id)));
+    const uniqueChildren = [...new Map(children.map(c=>[c.id,c])).values()];
+    uniqueChildren.forEach(child => placeFamily(child, depth + 1));
+  }
+
+  roots.forEach(r => placeFamily(r, 0));
+
+  // place any unvisited
+  people.filter(p=>!visited.has(p.id)).forEach(p => {
+    placeFamily(p, generations.length);
+  });
+
+  return generations;
+}
+
+/* ── FamilyTreeUnit component ── */
+function FamilyTreeUnit({ unit, people, onEdit, onDelete, onAddChild, onPhotoChange }) {
+  const [person1, person2] = unit.members;
+
+  const children = people.filter(p =>
+    p.parentIds.includes(person1.id) || (person2 && p.parentIds.includes(person2.id))
+  );
+  const uniqueChildren = [...new Map(children.map(c=>[c.id,c])).values()];
+
+  return (
+    <div className="family-unit">
+      <div className="couple-row">
+        <PersonCard person={person1} onEdit={onEdit} onDelete={onDelete} onAddChild={onAddChild} onPhotoChange={onPhotoChange}/>
+        {person2 && <>
+          <div className="couple-connector"/>
+          <PersonCard person={person2} onEdit={onEdit} onDelete={onDelete} onAddChild={onAddChild} onPhotoChange={onPhotoChange}/>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+/* ── Main App ── */
+function App() {
+  const [people, setPeople]         = useState(() => {
+    try { const s = localStorage.getItem('familyTree'); return s ? JSON.parse(s) : defaultTree(); }
+    catch { return defaultTree(); }
+  });
+  const [editTarget, setEditTarget] = useState(null);   // person obj or {new:true, parentId}
+  const [addChildFor, setAddChildFor] = useState(null);
+  const [addSpouseFor, setAddSpouseFor] = useState(null);
+  const [showAddRoot, setShowAddRoot] = useState(false);
+
+  const save = (updated) => {
+    setPeople(updated);
+    localStorage.setItem('familyTree', JSON.stringify(updated));
+  };
+
+  const handleEdit = (person) => setEditTarget(person);
+
+  const handleSaveEdit = (form) => {
+    const updated = people.map(p => p.id === editTarget.id ? {...p, ...form} : p);
+    save(updated);
+    setEditTarget(null);
+  };
+
+  const handleDelete = (id) => {
+    const updated = people
+      .filter(p => p.id !== id)
+      .map(p => ({
+        ...p,
+        spouseId:    p.spouseId === id ? null : p.spouseId,
+        parentIds:   p.parentIds.filter(pid => pid !== id),
+        childrenIds: p.childrenIds.filter(cid => cid !== id),
+      }));
+    save(updated);
+  };
+
+  const handleAddChild = (parentPerson) => {
+    setAddChildFor(parentPerson);
+  };
+
+  const handleSaveChild = (form) => {
+    const parent = addChildFor;
+    const spouse = parent.spouseId ? people.find(p=>p.id===parent.spouseId) : null;
+    const newId = uid();
+    const newPerson = {
+      id: newId,
+      ...form,
+      spouseId: null,
+      parentIds: spouse ? [parent.id, spouse.id] : [parent.id],
+      childrenIds: [],
+    };
+    const updated = people.map(p => {
+      if (p.id === parent.id || (spouse && p.id === spouse.id)) {
+        return {...p, childrenIds: [...p.childrenIds, newId]};
+      }
+      return p;
+    });
+    save([...updated, newPerson]);
+    setAddChildFor(null);
+  };
+
+  const handleAddSpouse = (person) => setAddSpouseFor(person);
+
+  const handleSaveSpouse = (form) => {
+    const person = addSpouseFor;
+    const newId = uid();
+    const newSpouse = {
+      id: newId,
+      ...form,
+      spouseId: person.id,
+      parentIds: [],
+      childrenIds: [...person.childrenIds],
+    };
+    const updated = people.map(p =>
+      p.id === person.id ? {...p, spouseId: newId} : p
+    );
+    save([...updated, newSpouse]);
+    setAddSpouseFor(null);
+  };
+
+  const handleAddRoot = (form) => {
+    const newId = uid();
+    save([...people, { id:newId, ...form, spouseId:null, parentIds:[], childrenIds:[] }]);
+    setShowAddRoot(false);
+  };
+
+  const handlePhotoChange = (id, dataUrl) => {
+    save(people.map(p => p.id === id ? {...p, photo: dataUrl} : p));
+  };
+
+  const handleReset = () => {
+    if (window.confirm('Reset to default family tree? All changes will be lost.')) {
+      _id = 1;
+      const d = defaultTree();
+      save(d);
+    }
+  };
+
+  const handleExport = () => {
+    const blob = new Blob([JSON.stringify(people, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'family-tree.json';
+    a.click();
+  };
+
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        save(data);
+      } catch { alert('Invalid JSON file'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const importRef = useRef();
+  const generations = buildGenerations(people);
+  const totalMembers = people.length;
+  const generations_count = generations.length;
+  const couples = people.filter(p=>p.spouseId).length / 2;
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="header">
+        <h1>🌳 Family Tree</h1>
+        <p>Your family's story, beautifully preserved</p>
+      </div>
+
+      {/* Stats */}
+      {people.length > 0 && (
+        <div className="stats-bar">
+          <div className="stat-item">
+            <div className="stat-value">{totalMembers}</div>
+            <div className="stat-label">Members</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">{generations_count}</div>
+            <div className="stat-label">Generations</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">{Math.floor(couples)}</div>
+            <div className="stat-label">Couples</div>
+          </div>
+        </div>
+      )}
+
+      {/* Toolbar */}
+      <div className="toolbar">
+        <button className="btn btn-primary" onClick={() => setShowAddRoot(true)}>➕ Add Member</button>
+        <button className="btn btn-secondary" onClick={() => importRef.current.click()}>📂 Import JSON</button>
+        <button className="btn btn-secondary" onClick={handleExport}>💾 Export JSON</button>
+        <button className="btn btn-danger"   onClick={handleReset}>🔄 Reset</button>
+        <input ref={importRef} type="file" accept=".json" style={{display:'none'}} onChange={handleImport}/>
+      </div>
+
+      {/* Tree */}
+      {people.length === 0 ? (
+        <div className="empty-state">
+          <div className="emoji">🌱</div>
+          <h2>Your family tree is empty</h2>
+          <p>Start by adding your first family member</p>
+          <button className="btn btn-primary" onClick={() => setShowAddRoot(true)}>➕ Add First Member</button>
+        </div>
+      ) : (
+        <div className="tree-canvas">
+          <div className="tree-inner">
+            {generations.map((gen, gi) => (
+              <React.Fragment key={gi}>
+                {gi > 0 && <div className="v-line-down"/>}
+                <div className="gen-row">
+                  {gen.map((unit, ui) => (
+                    <div key={ui} style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+                      {/* couple / single */}
+                      <div className="couple-row">
+                        {unit.members.map((person, pi) => (
+                          <React.Fragment key={person.id}>
+                            {pi === 1 && <div className="couple-connector"/>}
+                            <PersonCard
+                              person={person}
+                              onEdit={handleEdit}
+                              onDelete={handleDelete}
+                              onAddChild={handleAddChild}
+                              onPhotoChange={handlePhotoChange}
+                            />
+                          </React.Fragment>
+                        ))}
+                        {/* Add spouse button if single */}
+                        {unit.members.length === 1 && !unit.members[0].spouseId && (
+                          <button
+                            className="btn btn-secondary"
+                            style={{marginLeft:12, height:40, borderRadius:12, fontSize:'0.75rem', padding:'0 12px'}}
+                            onClick={() => handleAddSpouse(unit.members[0])}
+                          >💑 + Spouse</button>
+                        )}
+                      </div>
+
+                      {/* children */}
+                      {(() => {
+                        const primary = unit.members[0];
+                        const spouse  = unit.members[1];
+                        const kids = people.filter(p =>
+                          p.parentIds.includes(primary.id) ||
+                          (spouse && p.parentIds.includes(spouse.id))
+                        );
+                        const uniqueKids = [...new Map(kids.map(c=>[c.id,c])).values()];
+                        if (uniqueKids.length === 0) return null;
+                        return (
+                          <>
+                            <div className="v-line-down"/>
+                            <div className="children-row">
+                              {uniqueKids.map((kid, ki) => (
+                                <div key={kid.id} className="child-branch">
+                                  <div className="v-line-up"/>
+                                  <PersonCard
+                                    person={kid}
+                                    onEdit={handleEdit}
+                                    onDelete={handleDelete}
+                                    onAddChild={handleAddChild}
+                                    onPhotoChange={handlePhotoChange}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  ))}
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editTarget && (
+        <EditModal person={editTarget} onSave={handleSaveEdit} onClose={() => setEditTarget(null)}/>
+      )}
+
+      {/* Add Child Modal */}
+      {addChildFor && (
+        <EditModal
+          person={{ firstName:'', lastName: addChildFor.lastName||'', birth:'', death:'', gender:'male', role:'child', photo:null }}
+          onSave={handleSaveChild}
+          onClose={() => setAddChildFor(null)}
+        />
+      )}
+
+      {/* Add Root Member Modal */}
+      {showAddRoot && (
+        <EditModal
+          person={{ firstName:'', lastName:'', birth:'', death:'', gender:'male', role:'parent', photo:null }}
+          onSave={handleAddRoot}
+          onClose={() => setShowAddRoot(false)}
+        />
+      )}
+
+      {/* Add Spouse Modal */}
+      {addSpouseFor && (
+        <AddSpouseModal
+          person={addSpouseFor}
+          onSave={handleSaveSpouse}
+          onClose={() => setAddSpouseFor(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
