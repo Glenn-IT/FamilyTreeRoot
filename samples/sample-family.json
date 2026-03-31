@@ -1,0 +1,80 @@
+[
+  {
+    "id": "p1",
+    "firstName": "Robert",
+    "lastName": "Anderson",
+    "birth": "1935",
+    "death": "2010",
+    "gender": "male",
+    "role": "patriarch",
+    "photo": null,
+    "spouseId": "p2",
+    "parentIds": [],
+    "childrenIds": ["p3"]
+  },
+  {
+    "id": "p2",
+    "firstName": "Margaret",
+    "lastName": "Anderson",
+    "birth": "1938",
+    "death": null,
+    "gender": "female",
+    "role": "matriarch",
+    "photo": null,
+    "spouseId": "p1",
+    "parentIds": [],
+    "childrenIds": ["p3"]
+  },
+  {
+    "id": "p3",
+    "firstName": "James",
+    "lastName": "Anderson",
+    "birth": "1962",
+    "death": null,
+    "gender": "male",
+    "role": "parent",
+    "photo": null,
+    "spouseId": "p4",
+    "parentIds": ["p1", "p2"],
+    "childrenIds": ["p5", "p6"]
+  },
+  {
+    "id": "p4",
+    "firstName": "Sarah",
+    "lastName": "Anderson",
+    "birth": "1965",
+    "death": null,
+    "gender": "female",
+    "role": "parent",
+    "photo": null,
+    "spouseId": "p3",
+    "parentIds": [],
+    "childrenIds": ["p5", "p6"]
+  },
+  {
+    "id": "p5",
+    "firstName": "Emily",
+    "lastName": "Anderson",
+    "birth": "1990",
+    "death": null,
+    "gender": "female",
+    "role": "child",
+    "photo": null,
+    "spouseId": null,
+    "parentIds": ["p3", "p4"],
+    "childrenIds": []
+  },
+  {
+    "id": "p6",
+    "firstName": "Lucas",
+    "lastName": "Anderson",
+    "birth": "1993",
+    "death": null,
+    "gender": "male",
+    "role": "child",
+    "photo": null,
+    "spouseId": null,
+    "parentIds": ["p3", "p4"],
+    "childrenIds": []
+  }
+]
